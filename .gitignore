@@ -6,6 +6,7 @@ node_modules/
 .env
 .env.local
 .env.*.local
+!.env.example
 
 # Logs
 logs
@@ -21,7 +22,21 @@ dist/
 dist-ssr/
 build/
 
-# Editor directories and files
+# Coverage
+coverage/
+.nyc_output
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
 .vscode/*
 !.vscode/extensions.json
 .idea/
@@ -31,16 +46,19 @@ build/
 *.sln
 *.sw?
 
-# OS files
-.DS_Store
-Thumbs.db
-
 # Docker volumes
 mongodb_data/
-
-# Coverage
-coverage/
 
 # Temporary files
 *.tmp
 *.temp
+
+# Cache
+.cache
+.parcel-cache
+.eslintcache
+.stylelintcache
+
+# Misc
+*.tgz
+.yarn-integrity

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # FoodHub - Microservices-Based Online Food Ordering System
 
 A robust, scalable, and modern food ordering platform built with microservices architecture.
@@ -522,3 +523,7 @@ For issues or questions:
 ## Author
 
 Built with for IBM FoodApp Project.
+=======
+# FoodHub-Microservices
+Microservices-based food ordering system built with React, Node.js, Express, and MongoDB using API Gateway architecture and JWT authentication.
+>>>>>>> ccd613f51f6de3b8a7dc12f721bd05ca2ba44e94
