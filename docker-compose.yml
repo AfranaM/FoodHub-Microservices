@@ -1,0 +1,156 @@
+version: '3.8'
+
+services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:7.0
+    container_name: foodhub-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - foodhub-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # User Service
+  user-service:
+    build: ./user-service
+    container_name: foodhub-user-service
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - MONGODB_URI=mongodb://admin:password@mongodb:27017/userDB?authSource=admin
+      - JWT_SECRET=your-super-secret-jwt-key-change-in-production
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - foodhub-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/api/users/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Menu Service
+  menu-service:
+    build: ./menu-service
+    container_name: foodhub-menu-service
+    restart: unless-stopped
+    ports:
+      - "3002:3002"
+    environment:
+      - PORT=3002
+      - MONGODB_URI=mongodb://admin:password@mongodb:27017/menuDB?authSource=admin
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - foodhub-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3002/api/menu/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Order Service
+  order-service:
+    build: ./order-service
+    container_name: foodhub-order-service
+    restart: unless-stopped
+    ports:
+      - "3003:3003"
+    environment:
+      - PORT=3003
+      - MONGODB_URI=mongodb://admin:password@mongodb:27017/orderDB?authSource=admin
+      - JWT_SECRET=your-super-secret-jwt-key-change-in-production
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - foodhub-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3003/api/orders/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Notification Service
+  notification-service:
+    build: ./notification-service
+    container_name: foodhub-notification-service
+    restart: unless-stopped
+    ports:
+      - "3004:3004"
+    environment:
+      - PORT=3004
+      - MONGODB_URI=mongodb://admin:password@mongodb:27017/notificationDB?authSource=admin
+      - JWT_SECRET=your-super-secret-jwt-key-change-in-production
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - foodhub-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3004/api/notifications/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # API Gateway
+  api-gateway:
+    build: ./api-gateway
+    container_name: foodhub-api-gateway
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    environment:
+      - PORT=4000
+      - USER_SERVICE_URL=http://user-service:3001
+      - MENU_SERVICE_URL=http://menu-service:3002
+      - ORDER_SERVICE_URL=http://order-service:3003
+      - NOTIFICATION_SERVICE_URL=http://notification-service:3004
+    depends_on:
+      - user-service
+      - menu-service
+      - order-service
+      - notification-service
+    networks:
+      - foodhub-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Frontend
+  frontend:
+    build: ./frontend
+    container_name: foodhub-frontend
+    restart: unless-stopped
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:4000/api
+    depends_on:
+      - api-gateway
+    networks:
+      - foodhub-network
+
+volumes:
+  mongodb_data:
+
+networks:
+  foodhub-network:
+    driver: bridge
